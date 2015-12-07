@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompassionConnectClient", "CompassionConnectClient\CompassionConnectClient.csproj", "{4C814BBB-9ECA-43A4-AA0F-C0291794856D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompassionConnectModels", "CompassionConnectModels\CompassionConnectModels.csproj", "{64CEB279-9BCD-4643-A225-CADF077704F9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{FE4F0FF3-5C13-469A-932B-0295FE57F437}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.Config = .nuget\NuGet.Config
+		.nuget\NuGet.exe = .nuget\NuGet.exe
+		.nuget\NuGet.targets = .nuget\NuGet.targets
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompassionConnectClient.Tests", "CompassionConnectClient.Tests\CompassionConnectClient.Tests.csproj", "{F89AFF16-3C9C-413F-9FFA-90655EDEA743}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4C814BBB-9ECA-43A4-AA0F-C0291794856D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C814BBB-9ECA-43A4-AA0F-C0291794856D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C814BBB-9ECA-43A4-AA0F-C0291794856D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C814BBB-9ECA-43A4-AA0F-C0291794856D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64CEB279-9BCD-4643-A225-CADF077704F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64CEB279-9BCD-4643-A225-CADF077704F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64CEB279-9BCD-4643-A225-CADF077704F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64CEB279-9BCD-4643-A225-CADF077704F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F89AFF16-3C9C-413F-9FFA-90655EDEA743}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F89AFF16-3C9C-413F-9FFA-90655EDEA743}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F89AFF16-3C9C-413F-9FFA-90655EDEA743}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F89AFF16-3C9C-413F-9FFA-90655EDEA743}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
