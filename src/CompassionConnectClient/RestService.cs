@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json;
 using RestSharp;
@@ -34,17 +36,32 @@ namespace CompassionConnectClient
             tokenUpdateLock = new object();
         }
 
-        public TResponse Get<TResponse>(string baseUrl, string resource, IDictionary<string, string> requestParameters) where TResponse : new()
+        public TResponse Get<TResponse>(string baseUrl, string resource, IDictionary<string, string> requestParameters) where TResponse : class, new()
         {
-            return MakeCall<TResponse>(baseUrl, resource, null, requestParameters, Method.GET, false);
+            return MakeCall<TResponse>(baseUrl, resource, null, requestParameters, Method.GET, null, null, false);
         }
 
-        public TResponse Post<TResponse>(string baseUrl, string resource, object body, IDictionary<string, string> requestParameters) where TResponse : new()
+        public string Get(string baseUrl, string resource, IDictionary<string, string> requestParameters) 
         {
-            return MakeCall<TResponse>(baseUrl, resource, body, requestParameters, Method.POST, false);
+            return MakeCall<string>(baseUrl, resource, null, requestParameters, Method.GET, null, null, false);
         }
 
-        private TResponse MakeCall<TResponse>(string baseUrl, string resource, object body, IDictionary<string, string> requestParameters, Method httpMethod, bool secondAttempt) where TResponse : new()
+        public TResponse Post<TResponse>(string baseUrl, string resource, object body, IDictionary<string, string> requestParameters) where TResponse : class, new()
+        {
+            return MakeCall<TResponse>(baseUrl, resource, body, requestParameters, Method.POST, null, null, false);
+        }
+
+        public string PostFile(string baseUrl, string resource, Stream fileData, string contentType, IDictionary<string, string> requestParameters)
+        {
+            var base64Stream = new CryptoStream(fileData, new ToBase64Transform(), CryptoStreamMode.Read);
+            var memoryStream = new MemoryStream();
+            base64Stream.CopyTo(memoryStream);
+            var bytes = memoryStream.ToArray();
+
+            return MakeCall<string>(baseUrl, resource, null, requestParameters, Method.POST, bytes, contentType, false);
+        }
+
+        private TResponse MakeCall<TResponse>(string baseUrl, string resource, object body, IDictionary<string, string> requestParameters, Method httpMethod, byte[] file, string contentType, bool secondAttempt) where TResponse : class 
         {
             // get token on first call
             if (token == null)
@@ -61,32 +78,38 @@ namespace CompassionConnectClient
             };
 
             var request = new RestRequest(string.Format("{0}?{1}", resource, paramString), httpMethod);
-            request.AddHeader("Accept", "application/json");
+            client.ClearHandlers();
 
             if (body != null)
             {
                 request.RequestFormat = DataFormat.Json;
                 request.AddBody(body);
             }
+            if (file != null)
+                request.AddParameter(contentType, file, ParameterType.RequestBody);
+            if (contentType != null)
+                request.AddHeader("Content-Type", contentType);
 
             var response = client.Execute(request);
 
             if (response.StatusCode == HttpStatusCode.Unauthorized && !secondAttempt)
             {
                 AcquireToken(tokenToUse);
-                return MakeCall<TResponse>(baseUrl, resource, body, requestParameters, httpMethod, true);
+                return MakeCall<TResponse>(baseUrl, resource, body, requestParameters, httpMethod, file, contentType, true);
             }
-
+            
             if (response.ErrorException != null)
                 throw new RestServiceException(response.StatusCode, response.ErrorMessage, response.Content, response.ErrorException);
 
-            var rawResult = Encoding.UTF8.GetString(response.RawBytes);
-
+            var rawResult = response.Content;
             try
             {
                 if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Created)
                 {
-                    return JsonConvert.DeserializeObject<TResponse>(rawResult);
+                    if (typeof(TResponse) != typeof(string))
+                        return JsonConvert.DeserializeObject<TResponse>(rawResult);
+                    else
+                        return rawResult as TResponse;
                 }
                 if (response.StatusCode == HttpStatusCode.BadRequest || response.StatusCode == HttpStatusCode.InternalServerError)
                 {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -70,5 +71,23 @@ namespace CompassionConnectClient.Tests
         //{
         //    var result = compassionConnectService.GetCommunicationKit("C0000001527");
         //}
+
+        [Test]
+        public void UploadImage()
+        {
+            var stream = File.OpenRead(@"");
+            var result = compassionConnectService.ImageUpload(stream, "image/tif");
+        }
+
+        [Test]
+        public void GetImage()
+        {
+            var image = compassionConnectService.GetImage("321YZD7_00V4TGRLF0002YC", "321YZD7_00V4TGRLF0002YG.tif", null, null);
+
+            const string filePath = @"";
+            if (File.Exists(filePath)) 
+                File.Delete(filePath);
+            File.WriteAllBytes(filePath, image);
+        }
     }
 }
