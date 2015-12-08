@@ -6,8 +6,6 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json;
-using RestSharp;
-using RestSharp.Authenticators;
 
 namespace CompassionConnectClient
 {
@@ -38,95 +36,103 @@ namespace CompassionConnectClient
 
         public TResponse Get<TResponse>(string baseUrl, string resource, IDictionary<string, string> requestParameters) where TResponse : class, new()
         {
-            return MakeCall<TResponse>(baseUrl, resource, null, requestParameters, Method.GET, null, null, false);
+            return TryTwiceIfUnauthorised(tokenToUse => MakeCall<TResponse>(baseUrl, resource, null, requestParameters, "GET", tokenToUse));
         }
 
         public string Get(string baseUrl, string resource, IDictionary<string, string> requestParameters) 
         {
-            return MakeCall<string>(baseUrl, resource, null, requestParameters, Method.GET, null, null, false);
+            return TryTwiceIfUnauthorised(tokenToUse => MakeCall<string>(baseUrl, resource, null, requestParameters, "GET", tokenToUse));
         }
 
         public TResponse Post<TResponse>(string baseUrl, string resource, object body, IDictionary<string, string> requestParameters) where TResponse : class, new()
         {
-            return MakeCall<TResponse>(baseUrl, resource, body, requestParameters, Method.POST, null, null, false);
+            return TryTwiceIfUnauthorised(tokenToUse => MakeCall<TResponse>(baseUrl, resource, body, requestParameters, "POST", tokenToUse));
         }
 
-        public string PostFile(string baseUrl, string resource, Stream fileData, string contentType, IDictionary<string, string> requestParameters)
+        public string PostFile(string baseUrl, string resource, Stream fileStream, string contentType, IDictionary<string, string> requestParameters)
         {
-            var base64Stream = new CryptoStream(fileData, new ToBase64Transform(), CryptoStreamMode.Read);
-            var memoryStream = new MemoryStream();
-            base64Stream.CopyTo(memoryStream);
-            var bytes = memoryStream.ToArray();
-
-            return MakeCall<string>(baseUrl, resource, null, requestParameters, Method.POST, bytes, contentType, false);
+            return TryTwiceIfUnauthorised(tokenToUse => SendFile(baseUrl, resource, requestParameters, tokenToUse, fileStream, contentType));
         }
 
-        private TResponse MakeCall<TResponse>(string baseUrl, string resource, object body, IDictionary<string, string> requestParameters, Method httpMethod, byte[] file, string contentType, bool secondAttempt) where TResponse : class 
+        private TResponse MakeCall<TResponse>(string baseUrl, string resource, object body, IDictionary<string, string> requestParameters, string httpMethod, string tokenToUse) where TResponse : class 
+        {
+            
+            var request = CreateOAuthProtectedRequest(baseUrl, resource, requestParameters, tokenToUse, httpMethod, null);
+
+            if (body != null)
+            {
+                request.ContentType = "application/json";
+                var serialisedBody = JsonConvert.SerializeObject(body);
+                WriteBody(request, serialisedBody);
+            }
+
+            var response = DoRequest(request);
+            return GetBody<TResponse>(response);
+        }
+
+        private void WriteBody(WebRequest request, string serialisedBody)
+        {
+            var bodyData = Encoding.UTF8.GetBytes(serialisedBody);
+            request.ContentLength = bodyData.Length;
+            var requestStream = request.GetRequestStream();
+            requestStream.Write(bodyData, 0, bodyData.Length);
+        }
+
+        private string SendFile(string baseUrl, string resource, IDictionary<string, string> requestParameters, string oAuthToken, Stream fileStream, string contentType)
+        {
+            var request = CreateOAuthProtectedRequest(baseUrl, resource, requestParameters, oAuthToken, "POST", contentType);
+
+            // if this is the second attempt, restart stream
+            if (fileStream.CanSeek && fileStream.Position != 0)
+                fileStream.Seek(0, SeekOrigin.Begin);
+
+            var base64Stream = new CryptoStream(fileStream, new ToBase64Transform(), CryptoStreamMode.Read);
+
+            base64Stream.CopyTo(request.GetRequestStream());
+
+            var response = DoRequest(request);
+            return GetBody<string>(response);
+        }
+
+        private WebRequest CreateOAuthProtectedRequest(string baseUrl, string resource, IDictionary<string, string> requestParameters, string oAuthToken, string method, string contentType)
+        {
+            var uri = GetUri(baseUrl, resource, requestParameters);
+            var request = WebRequest.Create(uri);
+            request.ContentType = contentType;
+            request.Headers.Add("Authorization", string.Format("Bearer " + oAuthToken));
+            request.Method = method;
+            return request;
+        }
+
+        private string GetUri(string baseUrl, string resource, IDictionary<string, string> requestParameters)
+        {
+            var parameters = requestParameters != null ? new Dictionary<string, string>(requestParameters) : new Dictionary<string, string>();
+            parameters.Add("api_key", apiKey);
+            var paramString = string.Join("&", parameters.Select(kvp => string.Format("{0}={1}", kvp.Key, kvp.Value)));
+            return string.Format("{0}{1}?{2}", baseUrl, resource, paramString);
+        }
+
+        private TResult TryTwiceIfUnauthorised<TResult>(Func<string, TResult> call, bool secondAttempt = false)
         {
             // get token on first call
             if (token == null)
                 AcquireToken(token);
 
-            var parameters = requestParameters != null ? new Dictionary<string, string>(requestParameters) : new Dictionary<string, string>();
-            parameters.Add("api_key", apiKey);
-            var paramString = string.Join("&", parameters.Select(kvp => string.Format("{0}={1}", kvp.Key, kvp.Value)));
-
             var tokenToUse = token; // Save a copy of token in case it later changes by another thread requesting a new token. Need to know this when aquiring a token.
-            var client = new RestClient(baseUrl)
-            {
-                Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(tokenToUse)
-            };
 
-            var request = new RestRequest(string.Format("{0}?{1}", resource, paramString), httpMethod);
-            client.ClearHandlers();
-
-            if (body != null)
-            {
-                request.RequestFormat = DataFormat.Json;
-                request.AddBody(body);
-            }
-            if (file != null)
-                request.AddParameter(contentType, file, ParameterType.RequestBody);
-            if (contentType != null)
-                request.AddHeader("Content-Type", contentType);
-
-            var response = client.Execute(request);
-
-            if (response.StatusCode == HttpStatusCode.Unauthorized && !secondAttempt)
-            {
-                AcquireToken(tokenToUse);
-                return MakeCall<TResponse>(baseUrl, resource, body, requestParameters, httpMethod, file, contentType, true);
-            }
-            
-            if (response.ErrorException != null)
-                throw new RestServiceException(response.StatusCode, response.ErrorMessage, response.Content, response.ErrorException);
-
-            var rawResult = response.Content;
             try
             {
-                if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Created)
-                {
-                    if (typeof(TResponse) != typeof(string))
-                        return JsonConvert.DeserializeObject<TResponse>(rawResult);
-                    else
-                        return rawResult as TResponse;
-                }
-                if (response.StatusCode == HttpStatusCode.BadRequest || response.StatusCode == HttpStatusCode.InternalServerError)
-                {
-                    var result = JsonConvert.DeserializeObject<ErrorResponse>(rawResult);
-                    throw new CompassionConnectException(result.Error);
-                }
+                return call(tokenToUse);
             }
-            catch (CompassionConnectException)
+            catch (RestServiceException rse)
             {
+                if (rse.ResponseStatusCode == HttpStatusCode.Unauthorized && !secondAttempt)
+                {
+                    AcquireToken(tokenToUse);
+                    return TryTwiceIfUnauthorised(call, true);
+                }
                 throw;
             }
-            catch (Exception e)
-            {
-                throw new RestServiceException(response.StatusCode, response.ErrorMessage, response.Content, e);
-            }
-
-            throw new RestServiceException(response.StatusCode, response.ErrorMessage, response.Content, null);
         }
 
         private void AcquireToken(string previousTokenThatWasUsed)
@@ -137,17 +143,81 @@ namespace CompassionConnectClient
                 // Only try to get a new token if we didn't use an out of date copy.
                 if (previousTokenThatWasUsed == token)
                 {
-                    var client = new RestClient(oAuthUrl)
-                    {
-                        Authenticator = new HttpBasicAuthenticator(oAuthClientId, oAuthClientSecret)
-                    };
-                    var request = new RestRequest("token", Method.POST);
-                    request.AddParameter("application/x-www-form-urlencoded", "grant_type=client_credentials&scope=read+write", ParameterType.RequestBody);
-                    var response = client.Execute<TokenResponse>(request);
-                    if (response.StatusCode != HttpStatusCode.OK || response.ErrorException != null)
-                        throw new RestServiceException(response.StatusCode, response.ErrorMessage, response.Content, response.ErrorException);
-                    token = response.Data.AccessToken;
+                    var request = WebRequest.Create(string.Format("{0}token", oAuthUrl));
+                    request.ContentType = "application/x-www-form-urlencoded";
+                    var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Format("{0}:{1}", oAuthClientId, oAuthClientSecret)));
+                    request.Headers.Add("Authorization", string.Format("Basic {0}", authString));
+                    request.Method = "POST";
+                    WriteBody(request, "grant_type=client_credentials&scope=read+write");
+
+                    var response = DoRequest(request);
+                    var tokenResponse = GetBody<TokenResponse>(response);
+                    token = tokenResponse.AccessToken;
                 }
+            }
+        }
+
+        private HttpWebResponse DoRequest(WebRequest request)
+        {
+            try
+            {
+                return (HttpWebResponse) request.GetResponse();
+            }
+            catch (WebException we)
+            {
+                if (we.Status != WebExceptionStatus.ProtocolError)
+                    throw;
+
+                var response = (HttpWebResponse) we.Response;
+
+                string responseBody = null;
+                try
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest || response.StatusCode == HttpStatusCode.InternalServerError)
+                    {
+                        responseBody = GetRawBody(response);
+                        var result = JsonConvert.DeserializeObject<ErrorResponse>(responseBody);
+                        throw new CompassionConnectException(result.Error);
+                    }
+                }
+                catch (CompassionConnectException)
+                {
+                    throw;
+                }
+                catch (Exception e)
+                {
+                    throw new RestServiceException(response.StatusCode, response.StatusDescription, responseBody, e);
+                }
+                throw new RestServiceException(response.StatusCode, response.StatusDescription, responseBody, null);
+            }
+        }
+
+        private string GetRawBody(HttpWebResponse response)
+        {
+            var streamReader = new StreamReader(response.GetResponseStream());
+            var responseBody = streamReader.ReadToEnd();
+            response.Close();
+            return responseBody;
+        }
+
+        private TResult GetBody<TResult>(HttpWebResponse response) where TResult : class 
+        {
+            string responseBody = null;
+            try
+            {
+                responseBody = GetRawBody(response);
+                //if (response.StatusCode != HttpStatusCode.OK && response.StatusCode != HttpStatusCode.Created)
+                //    throw new RestServiceException(response.StatusCode, response.StatusDescription, responseBody, null);
+                TResult result;
+                if (typeof(TResult) != typeof(string))
+                    result = JsonConvert.DeserializeObject<TResult>(responseBody);
+                else
+                    result = responseBody as TResult; // just return string
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new RestServiceException(response.StatusCode, response.StatusDescription, responseBody, e);
             }
         }
     }

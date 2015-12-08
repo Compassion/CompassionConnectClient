@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Security;
 using System.Text;
 using System.Threading.Tasks;
 using CompassionConnectModels.Sbc;
@@ -25,6 +27,7 @@ namespace CompassionConnectClient.Tests
         [SetUp]
         public void SetUp()
         {
+            ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
             compassionConnectService = new CompassionConnectService(BaseUrl, AuthUrl, TestUrl, ApiKey, OAuthClientId, AuthClientSecret);
         }
 
