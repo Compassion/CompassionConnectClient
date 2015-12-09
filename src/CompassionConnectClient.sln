@@ -14,6 +14,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{FE4F0F
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompassionConnectClient.Tests", "CompassionConnectClient.Tests\CompassionConnectClient.Tests.csproj", "{F89AFF16-3C9C-413F-9FFA-90655EDEA743}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuspec", "nuspec", "{71164ACA-1F39-438F-A61B-E7047419C2EF}"
+	ProjectSection(SolutionItems) = preProject
+		nuspec\CompassionConnectClient.nuspec = nuspec\CompassionConnectClient.nuspec
+		nuspec\CompassionConnectModels.nuspec = nuspec\CompassionConnectModels.nuspec
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "content", "content", "{1560AB79-9AFA-4B53-B2DC-9DDB5590F6B1}"
+	ProjectSection(SolutionItems) = preProject
+		nuspec\content\app.config.install.xdt = nuspec\content\app.config.install.xdt
+		nuspec\content\app.config.uninstall.xdt = nuspec\content\app.config.uninstall.xdt
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,5 +47,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1560AB79-9AFA-4B53-B2DC-9DDB5590F6B1} = {71164ACA-1F39-438F-A61B-E7047419C2EF}
 	EndGlobalSection
 EndGlobal

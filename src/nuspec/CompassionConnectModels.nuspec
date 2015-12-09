@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>CompassionConnect.Models</id>
+    <title>Compassion Connect Models</title>
+    <version>1.0.0</version>
+    <authors>Lucas Pickstone</authors>
+    <owners>Compassion Australia</owners>
+    <iconUrl>http://www.compassion.com.au/favicon.ico</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Models related to GMC's Compassion Connect REST web services, such as the SBC Communication Kit.</description>
+    <releaseNotes>
+      1.0.0 - Initial release.
+    </releaseNotes>
+    <copyright>Copyright 2015</copyright>
+    <dependencies>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\CompassionConnectModels\bin\Release\CompassionConnectModels.dll" target="lib" />
+  </files>
+</package>

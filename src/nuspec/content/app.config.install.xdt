@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<configuration xmlns:xdt="http://schemas.microsoft.com/XML-Document-Transform">
+  <appSettings xdt:Transform="InsertIfMissing">
+  </appSettings>
+  <appSettings>
+    <add key="CompassionConnectServiceUrl" value="https://api2.compassion.com/test/ci/v2/" xdt:Transform="Insert" />
+    <add key="CompassionConnectServiceTestUrl" value="https://api2.compassion.com/TEST/CI/1/" xdt:Transform="Insert" />
+    <add key="CompassionConnectServiceTokenUrl" value="https://api2.compassion.com/core/connect/" xdt:Transform="Insert" />
+    <add key="CompassionConnectServiceApiKey" value="" xdt:Transform="Insert" />
+    <add key="CompassionConnectServiceOAuthClientId" value="" xdt:Transform="Insert" />
+    <add key="CompassionConnectServiceOAuthClientSecret" value="" xdt:Transform="Insert" />
+  </appSettings>
+</configuration>

@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<configuration xmlns:xdt="http://schemas.microsoft.com/XML-Document-Transform">
+  <appSettings>
+    <add key="CompassionConnectServiceUrl" xdt:Transform="Remove" xdt:Locator="Match(key)" />
+    <add key="CompassionConnectServiceTestUrl" xdt:Transform="Remove" xdt:Locator="Match(key)" />
+    <add key="CompassionConnectServiceTokenUrl" xdt:Transform="Remove" xdt:Locator="Match(key)" />
+    <add key="CompassionConnectServiceApiKey" xdt:Transform="Remove" xdt:Locator="Match(key)" />
+    <add key="CompassionConnectServiceOAuthClientId" xdt:Transform="Remove" xdt:Locator="Match(key)" />
+    <add key="CompassionConnectServiceOAuthClientSecret" xdt:Transform="Remove" xdt:Locator="Match(key)" />
+  </appSettings>
+</configuration>
