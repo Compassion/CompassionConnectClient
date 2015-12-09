@@ -15,8 +15,12 @@ namespace CompassionConnectClient
 
         //CommunicationKit GetCommunicationKit(string compassionSbcId);
 
-        string ImageUpload(Stream fileData, string imageType);
+        string ImageUpload(Stream imageData, UploadFormat imageType);
 
-        byte[] GetImage(string docId, string pageId, string format, int? page);
+        string ImageUpload(string filePath, UploadFormat imageType);
+
+        Stream ImageDownload(string docId, string pageId, DownloadFormat? format = null, int? page = null);
+
+        void ImageDownloadToFile(string filePath, string docId, string pageId, DownloadFormat? format = null, int? page = null);
     }
 }

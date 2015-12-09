@@ -1,6 +1,6 @@
 ﻿namespace CompassionConnectClient
 {
-    public class ErrorResponse
+    internal class ErrorResponse
     {
         public CompassionConnectError Error { get; set; }
     }

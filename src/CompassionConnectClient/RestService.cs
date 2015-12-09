@@ -39,19 +39,19 @@ namespace CompassionConnectClient
             return TryTwiceIfUnauthorised(tokenToUse => MakeCall<TResponse>(baseUrl, resource, null, requestParameters, "GET", tokenToUse));
         }
 
-        public string Get(string baseUrl, string resource, IDictionary<string, string> requestParameters) 
-        {
-            return TryTwiceIfUnauthorised(tokenToUse => MakeCall<string>(baseUrl, resource, null, requestParameters, "GET", tokenToUse));
-        }
-
         public TResponse Post<TResponse>(string baseUrl, string resource, object body, IDictionary<string, string> requestParameters) where TResponse : class, new()
         {
             return TryTwiceIfUnauthorised(tokenToUse => MakeCall<TResponse>(baseUrl, resource, body, requestParameters, "POST", tokenToUse));
         }
 
-        public string PostFile(string baseUrl, string resource, Stream fileStream, string contentType, IDictionary<string, string> requestParameters)
+        public string PostData(string baseUrl, string resource, Stream dataStream, string contentType, IDictionary<string, string> requestParameters)
         {
-            return TryTwiceIfUnauthorised(tokenToUse => SendFile(baseUrl, resource, requestParameters, tokenToUse, fileStream, contentType));
+            return TryTwiceIfUnauthorised(tokenToUse => SendFile(baseUrl, resource, requestParameters, tokenToUse, dataStream, contentType));
+        }
+
+        public Stream GetData(string baseUrl, string resource, IDictionary<string, string> requestParameters) 
+        {
+            return TryTwiceIfUnauthorised(tokenToUse => GetFile(baseUrl, resource, requestParameters, tokenToUse));
         }
 
         private TResponse MakeCall<TResponse>(string baseUrl, string resource, object body, IDictionary<string, string> requestParameters, string httpMethod, string tokenToUse) where TResponse : class 
@@ -67,7 +67,9 @@ namespace CompassionConnectClient
             }
 
             var response = DoRequest(request);
-            return GetBody<TResponse>(response);
+            var result = GetBody<TResponse>(response);
+            response.Close();
+            return result;
         }
 
         private void WriteBody(WebRequest request, string serialisedBody)
@@ -87,11 +89,28 @@ namespace CompassionConnectClient
                 fileStream.Seek(0, SeekOrigin.Begin);
 
             var base64Stream = new CryptoStream(fileStream, new ToBase64Transform(), CryptoStreamMode.Read);
-
             base64Stream.CopyTo(request.GetRequestStream());
 
             var response = DoRequest(request);
-            return GetBody<string>(response);
+            var url = GetBody<string>(response);
+            response.Close();
+            return url;
+        }
+
+        private Stream GetFile(string baseUrl, string resource, IDictionary<string, string> requestParameters, string tokenToUse)
+        {
+            var request = CreateOAuthProtectedRequest(baseUrl, resource, requestParameters, tokenToUse, "GET", null);
+            var response = DoRequest(request);
+            try
+            {
+                var decodedBase64Stream = new CryptoStream(response.GetResponseStream(), new FromBase64Transform(), CryptoStreamMode.Read);
+                return decodedBase64Stream;
+            }
+            catch(Exception e)
+            {
+                response.Close();
+                throw new RestServiceException(response.StatusCode, response.StatusDescription, null, e);
+            }
         }
 
         private WebRequest CreateOAuthProtectedRequest(string baseUrl, string resource, IDictionary<string, string> requestParameters, string oAuthToken, string method, string contentType)
@@ -165,17 +184,21 @@ namespace CompassionConnectClient
             }
             catch (WebException we)
             {
-                if (we.Status != WebExceptionStatus.ProtocolError)
+                var response = we.Response as HttpWebResponse;
+                
+                if (we.Status != WebExceptionStatus.ProtocolError || response == null)
+                {
+                    if (response != null)
+                        response.Close();
                     throw;
-
-                var response = (HttpWebResponse) we.Response;
+                }
 
                 string responseBody = null;
                 try
                 {
+                    responseBody = GetRawBody(response);
                     if (response.StatusCode == HttpStatusCode.BadRequest || response.StatusCode == HttpStatusCode.InternalServerError)
                     {
-                        responseBody = GetRawBody(response);
                         var result = JsonConvert.DeserializeObject<ErrorResponse>(responseBody);
                         throw new CompassionConnectException(result.Error);
                     }
@@ -188,7 +211,12 @@ namespace CompassionConnectClient
                 {
                     throw new RestServiceException(response.StatusCode, response.StatusDescription, responseBody, e);
                 }
-                throw new RestServiceException(response.StatusCode, response.StatusDescription, responseBody, null);
+                finally 
+                {
+                    response.Close();
+                }
+                response.Close();
+                throw new RestServiceException(response.StatusCode, response.StatusDescription, null, null);
             }
         }
 
@@ -209,7 +237,7 @@ namespace CompassionConnectClient
                 //if (response.StatusCode != HttpStatusCode.OK && response.StatusCode != HttpStatusCode.Created)
                 //    throw new RestServiceException(response.StatusCode, response.StatusDescription, responseBody, null);
                 TResult result;
-                if (typeof(TResult) != typeof(string))
+                if (typeof (TResult) != typeof (string))
                     result = JsonConvert.DeserializeObject<TResult>(responseBody);
                 else
                     result = responseBody as TResult; // just return string
@@ -218,6 +246,10 @@ namespace CompassionConnectClient
             catch (Exception e)
             {
                 throw new RestServiceException(response.StatusCode, response.StatusDescription, responseBody, e);
+            }
+            finally
+            {
+                response.Close();
             }
         }
     }

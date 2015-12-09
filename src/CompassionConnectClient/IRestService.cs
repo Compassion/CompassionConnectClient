@@ -5,12 +5,12 @@ namespace CompassionConnectClient
 {
     internal interface IRestService
     {
-        TResponse Get<TResponse>(string baseUrl, string resource, IDictionary<string, string> requestParameters) where TResponse : class, new();
-
-        string Get(string baseUrl, string resource, IDictionary<string, string> requestParameters);
+        TResponse Get<TResponse>(string baseUrl, string resource, IDictionary<string, string> requestParameters) where TResponse : class, new(); 
 
         TResponse Post<TResponse>(string baseUrl, string resource, object body, IDictionary<string, string> requestParameters) where TResponse : class, new();
 
-        string PostFile(string baseUrl, string resource, Stream fileStream, string contentType, IDictionary<string, string> requestParameters);
+        string PostData(string baseUrl, string resource, Stream dataStream, string contentType, IDictionary<string, string> requestParameters);
+
+        Stream GetData(string baseUrl, string resource, IDictionary<string, string> requestParameters);
     }
 }

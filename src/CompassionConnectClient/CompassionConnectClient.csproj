@@ -51,6 +51,7 @@
     <Compile Include="CompassionConnectError.cs" />
     <Compile Include="CompassionConnectService.cs" />
     <Compile Include="CompassionConnectException.cs" />
+    <Compile Include="DownloadFormat.cs" />
     <Compile Include="ErrorResponse.cs" />
     <Compile Include="ICompassionConnectService.cs" />
     <Compile Include="IRestService.cs" />
@@ -59,6 +60,7 @@
     <Compile Include="RestServiceException.cs" />
     <Compile Include="TestResponse.cs" />
     <Compile Include="TokenResponse.cs" />
+    <Compile Include="UploadFormat.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

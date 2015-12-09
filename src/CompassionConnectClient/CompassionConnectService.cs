@@ -29,8 +29,10 @@ namespace CompassionConnectClient
             restService = new RestService(tokenUrl, apiKey, oAuthClientId, oAuthClientSecret);
         }
 
-        internal CompassionConnectService(IRestService restService)
+        internal CompassionConnectService(IRestService restService, string baseUrl, string testUrl)
         {
+            this.baseUrl = baseUrl;
+            this.testUrl = testUrl;
             this.restService = restService;
         }
 
@@ -49,9 +51,18 @@ namespace CompassionConnectClient
             return restService.Post<CommunicationKitCreateResponses>(baseUrl, "communications", commKit, null).Responses[0];
         }
 
-        public string ImageUpload(Stream fileData, string imageType)
+        public string ImageUpload(Stream imageData, UploadFormat imageType)
         {
-            return restService.PostFile(baseUrl, "images", fileData, imageType, new Dictionary<string, string> { { "doctype", "s2bletter" } });
+            var contentType = "image/" + imageType.ToString().ToLower();
+            return restService.PostData(baseUrl, "images", imageData, contentType, new Dictionary<string, string> { { "doctype", "s2bletter" } });
+        }
+
+        public string ImageUpload(string filePath, UploadFormat imageType)
+        {
+            using (var stream = File.OpenRead(filePath))
+            {
+                return ImageUpload(stream, imageType);
+            }
         }
 
         //public CommunicationKit GetCommunicationKit(string compassionSbcId)
@@ -59,16 +70,28 @@ namespace CompassionConnectClient
         //    return restService.Get<CommunicationKit>(baseUrl, string.Format("communications/{0}", compassionSbcId), null);
         //}
 
-        public byte[] GetImage(string docId, string pageId, string format, int? page)
+        public Stream ImageDownload(string docId, string pageId, DownloadFormat? format = null, int? page = null)
         {
             var requestParameters = new Dictionary<string, string>();
-            if (format != null)
-                requestParameters.Add("format", format);
+            if (format.HasValue)
+            {
+                var formatString = format.ToString().ToLower().Replace("tiff", "tif");
+                requestParameters.Add("format", formatString);
+            }
             if (page.HasValue)
                 requestParameters.Add("pg", page.ToString());
-            var base64EncodedResult = restService.Get(baseUrl, string.Format("images/{0}/page/{1}", docId, pageId), requestParameters);
-            var data = Convert.FromBase64String(base64EncodedResult);
-            return data;
+            return restService.GetData(baseUrl, string.Format("images/{0}/page/{1}", docId, pageId), requestParameters);
+        }
+
+        public void ImageDownloadToFile(string filePath, string docId, string pageId, DownloadFormat? format = null, int? page = null)
+        {
+            using (var imageStream = ImageDownload(docId, pageId, format, page))
+            {
+                using (var fileStream = File.Open(filePath, FileMode.CreateNew, FileAccess.Write))
+                {
+                    imageStream.CopyTo(fileStream);
+                }
+            }
         }
     }
 }

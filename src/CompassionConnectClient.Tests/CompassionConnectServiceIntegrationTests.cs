@@ -27,7 +27,7 @@ namespace CompassionConnectClient.Tests
         [SetUp]
         public void SetUp()
         {
-            ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+            ServicePointManager.ServerCertificateValidationCallback = delegate { return true; }; // So Fiddler can be used without getting SSL errors
             compassionConnectService = new CompassionConnectService(BaseUrl, AuthUrl, TestUrl, ApiKey, OAuthClientId, AuthClientSecret);
         }
 
@@ -78,19 +78,16 @@ namespace CompassionConnectClient.Tests
         [Test]
         public void UploadImage()
         {
-            var stream = File.OpenRead(@"");
-            var result = compassionConnectService.ImageUpload(stream, "image/tif");
+            var result = compassionConnectService.ImageUpload(@"", UploadFormat.Tiff);
         }
 
         [Test]
         public void GetImage()
         {
-            var image = compassionConnectService.GetImage("321YZD7_00V4TGRLF0002YC", "321YZD7_00V4TGRLF0002YG.tif", null, null);
-
             const string filePath = @"";
-            if (File.Exists(filePath)) 
+            if (File.Exists(filePath))
                 File.Delete(filePath);
-            File.WriteAllBytes(filePath, image);
+            compassionConnectService.ImageDownloadToFile(filePath, "321YZD7_00V4TGRLF0002YC", "321YZD7_00V4TGRLF0002YG.tif");
         }
     }
 }
