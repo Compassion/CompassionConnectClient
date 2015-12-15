@@ -78,7 +78,7 @@ namespace CompassionConnectClient.Tests
         [Test]
         public void UploadImage()
         {
-            var result = compassionConnectService.ImageUpload(@"", UploadFormat.Tiff);
+            var result = compassionConnectService.ImageUpload(@"", UploadFormat.Pdf);
         }
 
         [Test]
@@ -87,7 +87,7 @@ namespace CompassionConnectClient.Tests
             const string filePath = @"";
             if (File.Exists(filePath))
                 File.Delete(filePath);
-            compassionConnectService.ImageDownloadToFile(filePath, "321YZD7_00V4TGRLF0002YC", "321YZD7_00V4TGRLF0002YG.tif");
+            compassionConnectService.ImageDownloadToFile(filePath, "321YZD7_00V4TGRLF0002YC", "321YZD7_00V4TGRLF0002YG.tif", DownloadFormat.Pdf);
         }
     }
 }

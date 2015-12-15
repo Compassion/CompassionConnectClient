@@ -88,8 +88,9 @@ namespace CompassionConnectClient
             if (fileStream.CanSeek && fileStream.Position != 0)
                 fileStream.Seek(0, SeekOrigin.Begin);
 
-            var base64Stream = new CryptoStream(fileStream, new ToBase64Transform(), CryptoStreamMode.Read);
-            base64Stream.CopyTo(request.GetRequestStream());
+            //var base64Stream = new CryptoStream(fileStream, new ToBase64Transform(), CryptoStreamMode.Read);
+            //base64Stream.CopyTo(request.GetRequestStream());
+            fileStream.CopyTo(request.GetRequestStream());
 
             var response = DoRequest(request);
             var url = GetBody<string>(response);
@@ -103,8 +104,9 @@ namespace CompassionConnectClient
             var response = DoRequest(request);
             try
             {
-                var decodedBase64Stream = new CryptoStream(response.GetResponseStream(), new FromBase64Transform(), CryptoStreamMode.Read);
-                return decodedBase64Stream;
+                //var decodedBase64Stream = new CryptoStream(response.GetResponseStream(), new FromBase64Transform(), CryptoStreamMode.Read);
+                //return decodedBase64Stream;
+                return response.GetResponseStream();
             }
             catch(Exception e)
             {
