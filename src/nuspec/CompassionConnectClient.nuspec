@@ -3,13 +3,14 @@
   <metadata>
     <id>CompassionConnect.Client</id>
     <title>Compassion Connect Client</title>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <authors>Lucas Pickstone</authors>
     <owners>Compassion Australia</owners>
     <iconUrl>http://www.compassion.com.au/favicon.ico</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Allows easy .Net integration with GMC's Compassion Connect REST web services.</description>
     <releaseNotes>
+      1.0.2 - Added ability to download images from a complete URL, as provided in CommKits. 
       1.0.1 - Stopped Base64 encoding image uploads. This was failing for PDFs and is not required for TIFFs.
       1.0.0 - Initial release.
     </releaseNotes>

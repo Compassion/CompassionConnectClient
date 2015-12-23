@@ -38,7 +38,7 @@ namespace CompassionConnectClient
 
         public TestResponse Test()
         {
-            return restService.Get<TestResponse>(testUrl, "Test", null);
+            return restService.Get<TestResponse>(string.Format("{0}{1}", testUrl, "Test"), null);
         }
 
         public CommunicationKitCreateResponse CreateCommunicationKit(CommunicationKit commKit)
@@ -48,13 +48,13 @@ namespace CompassionConnectClient
             if (commKit.FieldOffice == null)
                 commKit.FieldOffice = new FieldOffice();
 
-            return restService.Post<CommunicationKitCreateResponses>(baseUrl, "communications", commKit, null).Responses[0];
+            return restService.Post<CommunicationKitCreateResponses>(string.Format("{0}{1}", baseUrl, "communications"), commKit, null).Responses[0];
         }
 
         public string ImageUpload(Stream imageData, UploadFormat imageType)
         {
             var contentType = "image/" + imageType.ToString().ToLower();
-            return restService.PostData(baseUrl, "images", imageData, contentType, new Dictionary<string, string> { { "doctype", "s2bletter" } });
+            return restService.PostData(string.Format("{0}{1}", baseUrl, "images"), imageData, contentType, new Dictionary<string, string> { { "doctype", "s2bletter" } });
         }
 
         public string ImageUpload(string filePath, UploadFormat imageType)
@@ -72,6 +72,11 @@ namespace CompassionConnectClient
 
         public Stream ImageDownload(string docId, string pageId, DownloadFormat? format = null, int? page = null)
         {
+            return ImageDownload(string.Format("{0}images/{1}/page/{2}", baseUrl, docId, pageId), format, page);
+        }
+
+        public Stream ImageDownload(string imageUrl, DownloadFormat? format = null, int? page = null)
+        {
             var requestParameters = new Dictionary<string, string>();
             if (format.HasValue)
             {
@@ -80,12 +85,18 @@ namespace CompassionConnectClient
             }
             if (page.HasValue)
                 requestParameters.Add("pg", page.ToString());
-            return restService.GetData(baseUrl, string.Format("images/{0}/page/{1}", docId, pageId), requestParameters);
+
+            return restService.GetData(imageUrl, requestParameters);
         }
 
         public void ImageDownloadToFile(string filePath, string docId, string pageId, DownloadFormat? format = null, int? page = null)
         {
-            using (var imageStream = ImageDownload(docId, pageId, format, page))
+            ImageDownloadToFile(filePath, string.Format("{0}images/{1}/page/{2}", baseUrl, docId, pageId), format, page);
+        }
+
+        public void ImageDownloadToFile(string filePath, string imageUrl, DownloadFormat? format = null, int? page = null)
+        {
+            using (var imageStream = ImageDownload(imageUrl, format, page))
             {
                 using (var fileStream = File.Open(filePath, FileMode.CreateNew, FileAccess.Write))
                 {

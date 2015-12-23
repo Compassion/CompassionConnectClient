@@ -34,30 +34,30 @@ namespace CompassionConnectClient
             tokenUpdateLock = new object();
         }
 
-        public TResponse Get<TResponse>(string baseUrl, string resource, IDictionary<string, string> requestParameters) where TResponse : class, new()
+        public TResponse Get<TResponse>(string url, IDictionary<string, string> requestParameters) where TResponse : class, new()
         {
-            return TryTwiceIfUnauthorised(tokenToUse => MakeCall<TResponse>(baseUrl, resource, null, requestParameters, "GET", tokenToUse));
+            return TryTwiceIfUnauthorised(tokenToUse => MakeCall<TResponse>(url, null, requestParameters, "GET", tokenToUse));
         }
 
-        public TResponse Post<TResponse>(string baseUrl, string resource, object body, IDictionary<string, string> requestParameters) where TResponse : class, new()
+        public TResponse Post<TResponse>(string url, object body, IDictionary<string, string> requestParameters) where TResponse : class, new()
         {
-            return TryTwiceIfUnauthorised(tokenToUse => MakeCall<TResponse>(baseUrl, resource, body, requestParameters, "POST", tokenToUse));
+            return TryTwiceIfUnauthorised(tokenToUse => MakeCall<TResponse>(url, body, requestParameters, "POST", tokenToUse));
         }
 
-        public string PostData(string baseUrl, string resource, Stream dataStream, string contentType, IDictionary<string, string> requestParameters)
+        public string PostData(string url, Stream dataStream, string contentType, IDictionary<string, string> requestParameters)
         {
-            return TryTwiceIfUnauthorised(tokenToUse => SendFile(baseUrl, resource, requestParameters, tokenToUse, dataStream, contentType));
+            return TryTwiceIfUnauthorised(tokenToUse => SendFile(url, requestParameters, tokenToUse, dataStream, contentType));
         }
 
-        public Stream GetData(string baseUrl, string resource, IDictionary<string, string> requestParameters) 
+        public Stream GetData(string url, IDictionary<string, string> requestParameters) 
         {
-            return TryTwiceIfUnauthorised(tokenToUse => GetFile(baseUrl, resource, requestParameters, tokenToUse));
+            return TryTwiceIfUnauthorised(tokenToUse => GetFile(url, requestParameters, tokenToUse));
         }
 
-        private TResponse MakeCall<TResponse>(string baseUrl, string resource, object body, IDictionary<string, string> requestParameters, string httpMethod, string tokenToUse) where TResponse : class 
+        private TResponse MakeCall<TResponse>(string url, object body, IDictionary<string, string> requestParameters, string httpMethod, string tokenToUse) where TResponse : class 
         {
             
-            var request = CreateOAuthProtectedRequest(baseUrl, resource, requestParameters, tokenToUse, httpMethod, null);
+            var request = CreateOAuthProtectedRequest(url, requestParameters, tokenToUse, httpMethod, null);
 
             if (body != null)
             {
@@ -80,9 +80,9 @@ namespace CompassionConnectClient
             requestStream.Write(bodyData, 0, bodyData.Length);
         }
 
-        private string SendFile(string baseUrl, string resource, IDictionary<string, string> requestParameters, string oAuthToken, Stream fileStream, string contentType)
+        private string SendFile(string url, IDictionary<string, string> requestParameters, string oAuthToken, Stream fileStream, string contentType)
         {
-            var request = CreateOAuthProtectedRequest(baseUrl, resource, requestParameters, oAuthToken, "POST", contentType);
+            var request = CreateOAuthProtectedRequest(url, requestParameters, oAuthToken, "POST", contentType);
 
             // if this is the second attempt, restart stream
             if (fileStream.CanSeek && fileStream.Position != 0)
@@ -93,14 +93,14 @@ namespace CompassionConnectClient
             fileStream.CopyTo(request.GetRequestStream());
 
             var response = DoRequest(request);
-            var url = GetBody<string>(response);
+            var fileUrl = GetBody<string>(response);
             response.Close();
-            return url;
+            return fileUrl;
         }
 
-        private Stream GetFile(string baseUrl, string resource, IDictionary<string, string> requestParameters, string tokenToUse)
+        private Stream GetFile(string url, IDictionary<string, string> requestParameters, string tokenToUse)
         {
-            var request = CreateOAuthProtectedRequest(baseUrl, resource, requestParameters, tokenToUse, "GET", null);
+            var request = CreateOAuthProtectedRequest(url, requestParameters, tokenToUse, "GET", null);
             var response = DoRequest(request);
             try
             {
@@ -115,9 +115,9 @@ namespace CompassionConnectClient
             }
         }
 
-        private WebRequest CreateOAuthProtectedRequest(string baseUrl, string resource, IDictionary<string, string> requestParameters, string oAuthToken, string method, string contentType)
+        private WebRequest CreateOAuthProtectedRequest(string url, IDictionary<string, string> requestParameters, string oAuthToken, string method, string contentType)
         {
-            var uri = GetUri(baseUrl, resource, requestParameters);
+            var uri = GetUri(url, requestParameters);
             var request = WebRequest.Create(uri);
             request.ContentType = contentType;
             request.Headers.Add("Authorization", string.Format("Bearer " + oAuthToken));
@@ -125,12 +125,12 @@ namespace CompassionConnectClient
             return request;
         }
 
-        private string GetUri(string baseUrl, string resource, IDictionary<string, string> requestParameters)
+        private string GetUri(string url, IDictionary<string, string> requestParameters)
         {
             var parameters = requestParameters != null ? new Dictionary<string, string>(requestParameters) : new Dictionary<string, string>();
             parameters.Add("api_key", apiKey);
             var paramString = string.Join("&", parameters.Select(kvp => string.Format("{0}={1}", kvp.Key, kvp.Value)));
-            return string.Format("{0}{1}?{2}", baseUrl, resource, paramString);
+            return string.Format("{0}?{1}", url, paramString);
         }
 
         private TResult TryTwiceIfUnauthorised<TResult>(Func<string, TResult> call, bool secondAttempt = false)

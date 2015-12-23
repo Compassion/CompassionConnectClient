@@ -9,9 +9,9 @@ namespace CompassionConnectClient.Tests
     [TestFixture]
     public class CompassionConnectTests
     {
-        private const string BaseUrl = "https://base.url.com";
+        private const string BaseUrl = "https://base.url.com/";
 
-        private const string TestUrl = "https://test.url.com";
+        private const string TestUrl = "https://test.url.com/";
 
         [Test]
         public void Test()
@@ -19,7 +19,7 @@ namespace CompassionConnectClient.Tests
             var expectedResponse = new TestResponse();
 
             var restService = MockRepository.GenerateMock<IRestService>();
-            restService.Expect(r => r.Get<TestResponse>(TestUrl, "Test", null))
+            restService.Expect(r => r.Get<TestResponse>(TestUrl + "Test", null))
                 .Return(expectedResponse);
 
             var compassionConnectService = new CompassionConnectService(restService, BaseUrl, TestUrl);
@@ -36,7 +36,7 @@ namespace CompassionConnectClient.Tests
             var expectedResponse = new CommunicationKitCreateResponses { Responses = new List<CommunicationKitCreateResponse>() { new CommunicationKitCreateResponse() }};
 
             var restService = MockRepository.GenerateMock<IRestService>();
-            restService.Expect(r => r.Post<CommunicationKitCreateResponses>(BaseUrl, "communications", commKit, null))
+            restService.Expect(r => r.Post<CommunicationKitCreateResponses>(BaseUrl + "communications", commKit, null))
                 .Return(expectedResponse);
 
             var compassionConnectService = new CompassionConnectService(restService, BaseUrl, TestUrl);
@@ -54,8 +54,8 @@ namespace CompassionConnectClient.Tests
 
             var stream = MockRepository.GenerateStub<Stream>();
             var restService = MockRepository.GenerateMock<IRestService>();
-            restService.Expect(r => r.PostData(Arg<string>.Is.Equal(BaseUrl), Arg<string>.Is.Equal("images"), Arg<Stream>.Is.Equal(stream), Arg<string>.Is.Equal("image/tiff"), Arg<Dictionary<string, string>>.Is.Anything))
-                .WhenCalled(m => requestParameters = m.Arguments[4] as Dictionary<string, string>)
+            restService.Expect(r => r.PostData(Arg<string>.Is.Equal(BaseUrl + "images"), Arg<Stream>.Is.Equal(stream), Arg<string>.Is.Equal("image/tiff"), Arg<Dictionary<string, string>>.Is.Anything))
+                .WhenCalled(m => requestParameters = m.Arguments[3] as Dictionary<string, string>)
                 .Return(expectedResponse);
 
             var compassionConnectService = new CompassionConnectService(restService, BaseUrl, TestUrl);
@@ -75,8 +75,8 @@ namespace CompassionConnectClient.Tests
 
             var stream = MockRepository.GenerateStub<Stream>();
             var restService = MockRepository.GenerateMock<IRestService>();
-            restService.Expect(r => r.PostData(Arg<string>.Is.Equal(BaseUrl), Arg<string>.Is.Equal("images"), Arg<Stream>.Is.Equal(stream), Arg<string>.Is.Equal("image/pdf"), Arg<Dictionary<string, string>>.Is.Anything))
-                .WhenCalled(m => requestParameters = m.Arguments[4] as Dictionary<string, string>)
+            restService.Expect(r => r.PostData(Arg<string>.Is.Equal(BaseUrl + "images"), Arg<Stream>.Is.Equal(stream), Arg<string>.Is.Equal("image/pdf"), Arg<Dictionary<string, string>>.Is.Anything))
+                .WhenCalled(m => requestParameters = m.Arguments[3] as Dictionary<string, string>)
                 .Return(expectedResponse);
 
             var compassionConnectService = new CompassionConnectService(restService, BaseUrl, TestUrl);
@@ -97,17 +97,17 @@ namespace CompassionConnectClient.Tests
             Dictionary<string, string> requestParameters = null;
 
             var stream = MockRepository.GenerateStub<Stream>();
-            var restService = MockRepository.GenerateMock<IRestService>();
-            restService.Expect(r => r.GetData(Arg<string>.Is.Equal(BaseUrl), Arg<string>.Is.Equal("images/docId/page/pageId"), Arg<Dictionary<string, string>>.Is.Anything))
-                .WhenCalled(m => requestParameters = m.Arguments[2] as Dictionary<string, string>)
+            var restService = MockRepository.GenerateStrictMock<IRestService>();
+            restService.Expect(r => r.GetData(Arg<string>.Is.Equal(BaseUrl + "images/docId/page/pageId"), Arg<Dictionary<string, string>>.Is.Anything))
+                .WhenCalled(m => requestParameters = m.Arguments[1] as Dictionary<string, string>)
                 .Return(stream);
 
             var compassionConnectService = new CompassionConnectService(restService, BaseUrl, TestUrl);
             var response = compassionConnectService.ImageDownload(docId, pageId);
 
+            restService.VerifyAllExpectations();
             Assert.That(response, Is.EqualTo(stream));
             Assert.That(requestParameters.Count, Is.EqualTo(0));
-            restService.VerifyAllExpectations();
         }
 
         [Test]
@@ -120,8 +120,8 @@ namespace CompassionConnectClient.Tests
 
             var stream = MockRepository.GenerateStub<Stream>();
             var restService = MockRepository.GenerateMock<IRestService>();
-            restService.Expect(r => r.GetData(Arg<string>.Is.Equal(BaseUrl), Arg<string>.Is.Equal("images/docId/page/pageId"), Arg<Dictionary<string, string>>.Is.Anything))
-                .WhenCalled(m => requestParameters = m.Arguments[2] as Dictionary<string, string>)
+            restService.Expect(r => r.GetData(Arg<string>.Is.Equal(BaseUrl + "images/docId/page/pageId"), Arg<Dictionary<string, string>>.Is.Anything))
+                .WhenCalled(m => requestParameters = m.Arguments[1] as Dictionary<string, string>)
                 .Return(stream);
 
             var compassionConnectService = new CompassionConnectService(restService, BaseUrl, TestUrl);
@@ -144,8 +144,8 @@ namespace CompassionConnectClient.Tests
 
             var stream = MockRepository.GenerateStub<Stream>();
             var restService = MockRepository.GenerateMock<IRestService>();
-            restService.Expect(r => r.GetData(Arg<string>.Is.Equal(BaseUrl), Arg<string>.Is.Equal("images/docId/page/pageId"), Arg<Dictionary<string, string>>.Is.Anything))
-                .WhenCalled(m => requestParameters = m.Arguments[2] as Dictionary<string, string>)
+            restService.Expect(r => r.GetData(Arg<string>.Is.Equal(BaseUrl + "images/docId/page/pageId"), Arg<Dictionary<string, string>>.Is.Anything))
+                .WhenCalled(m => requestParameters = m.Arguments[1] as Dictionary<string, string>)
                 .Return(stream);
 
             var compassionConnectService = new CompassionConnectService(restService, BaseUrl, TestUrl);

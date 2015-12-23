@@ -44,11 +44,10 @@ namespace CompassionConnectClient.Tests
             {
                 Beneficiary = new Beneficiary
                 {
-                    LocalId = "EC4210642",
-                    CompassId = "1787658"
+                    LocalId = "EC5500279"
                 },
 
-                GlobalPartner = new GlobalPartner { Id = "US" },
+                GlobalPartner = new GlobalPartner { Id = "AU" },
                 Direction = "Supporter To Beneficiary",
                 Pages = new List<Page>
                 {
@@ -57,13 +56,13 @@ namespace CompassionConnectClient.Tests
                 },
                 RelationshipType = "Sponsor",
                 SBCGlobalStatus = "Received in the system",
-                GlobalPartnerSBCId = "AAE-122-3456-not-a-real-sample",
-                NumberOfPages = 4,
+                GlobalPartnerSBCId = "B537A557-04A4-4622-A233-E3628BC445F0",
+                NumberOfPages = 2,
                 OriginalLanguage = "French",
-                OriginalLetterURL = "https://api2.compassion.com/stage/ci/v2/images/321YZC3_00NZCGNDE000B0C/page/321YZC3_00NZCGNDE000B0G.tiff",
+                OriginalLetterURL = "https://api2.compassion.com/stage/ci/v2/images/321YZDQ_0107KC642000001/page/321YZDQ_0107KC642000005.tif",
                 SourceSystem = "CRM",
                 Template = "FR-A-1S11-1",
-                Supporter = new Supporter { CompassConstituentId = "7-344590", GlobalId = null },
+                Supporter = new Supporter { CompassConstituentId = "16-1101861", GlobalId = null },
             };
 
             var result = compassionConnectService.CreateCommunicationKit(commKit);
@@ -82,12 +81,21 @@ namespace CompassionConnectClient.Tests
         }
 
         [Test]
-        public void GetImage()
+        public void GetImageFromDocIdAndPageId()
         {
             const string filePath = @"";
             if (File.Exists(filePath))
                 File.Delete(filePath);
-            compassionConnectService.ImageDownloadToFile(filePath, "321YZD7_00V4TGRLF0002YC", "321YZD7_00V4TGRLF0002YG.tif", DownloadFormat.Pdf);
+            compassionConnectService.ImageDownloadToFile(filePath, "321YZDG_00XYX9QVB00005V", "321YZDG_00XZ29R9Y00001T.tif", DownloadFormat.Pdf);
+        }
+
+        [Test]
+        public void GetImageFromCompleteUrl()
+        {
+            const string filePath = @"";
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+            compassionConnectService.ImageDownloadToFile(filePath, "", DownloadFormat.Pdf);
         }
     }
 }
