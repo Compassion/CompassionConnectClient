@@ -21,6 +21,10 @@ namespace CompassionConnectClient
 
         Stream ImageDownload(string docId, string pageId, DownloadFormat? format = null, int? page = null);
 
+        Stream ImageDownload(string imageUrl, DownloadFormat? format = null, int? page = null);
+
         void ImageDownloadToFile(string filePath, string docId, string pageId, DownloadFormat? format = null, int? page = null);
+
+        void ImageDownloadToFile(string filePath, string imageUrl, DownloadFormat? format = null, int? page = null);
     }
 }
