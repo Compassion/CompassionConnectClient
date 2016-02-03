@@ -54,7 +54,7 @@ namespace CompassionConnectClient
         public string ImageUpload(Stream imageData, UploadFormat imageType)
         {
             var contentType = "image/" + imageType.ToString().ToLower();
-            return restService.PostData(string.Format("{0}{1}", baseUrl, "images"), imageData, contentType, new Dictionary<string, string> { { "doctype", "s2bletter" } });
+            return restService.PostData(string.Format("{0}{1}", baseUrl, "images/documents"), imageData, contentType, new Dictionary<string, string> { { "doctype", "s2bletter" } });
         }
 
         public string ImageUpload(string filePath, UploadFormat imageType)
@@ -72,7 +72,7 @@ namespace CompassionConnectClient
 
         public Stream ImageDownload(string docId, string pageId, DownloadFormat? format = null, int? page = null)
         {
-            return ImageDownload(string.Format("{0}images/{1}/page/{2}", baseUrl, docId, pageId), format, page);
+            return ImageDownload(string.Format("{0}images/documents/{1}/page/{2}", baseUrl, docId, pageId), format, page);
         }
 
         public Stream ImageDownload(string imageUrl, DownloadFormat? format = null, int? page = null)
@@ -91,7 +91,7 @@ namespace CompassionConnectClient
 
         public void ImageDownloadToFile(string filePath, string docId, string pageId, DownloadFormat? format = null, int? page = null)
         {
-            ImageDownloadToFile(filePath, string.Format("{0}images/{1}/page/{2}", baseUrl, docId, pageId), format, page);
+            ImageDownloadToFile(filePath, string.Format("{0}images/documents/{1}/page/{2}", baseUrl, docId, pageId), format, page);
         }
 
         public void ImageDownloadToFile(string filePath, string imageUrl, DownloadFormat? format = null, int? page = null)
