@@ -25,7 +25,7 @@ if not "%errorlevel%"=="0" goto failure
 
 REM Unit tests
 call %nuget% install NUnit.Runners -Version 3.0.1 -OutputDirectory packages
-packages\NUnit.Runners.3.0.1\tools\nunit-console.exe /config:%config% /framework:net-4.5 CompassionConnectClient.Tests\bin\%config%\CompassionConnectClient.Tests.dll
+packages\NUnit.Console.3.0.1\tools\nunit3-console.exe /config:%config% /framework:net-4.5 CompassionConnectClient.Tests\bin\%config%\CompassionConnectClient.Tests.dll
 if not "%errorlevel%"=="0" goto failure
 
 REM Package
