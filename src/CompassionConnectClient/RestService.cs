@@ -62,7 +62,7 @@ namespace CompassionConnectClient
             if (body != null)
             {
                 request.ContentType = "application/json";
-                var serialisedBody = JsonConvert.SerializeObject(body);
+                var serialisedBody = JsonConvert.SerializeObject(body, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, DefaultValueHandling = DefaultValueHandling.Ignore });
                 WriteBody(request, serialisedBody);
             }
 

@@ -57,7 +57,6 @@ namespace CompassionConnectClient.Tests
                 RelationshipType = "Sponsor",
                 SBCGlobalStatus = "Received in the system",
                 GlobalPartnerSBCId = "B537A557-04A4-4622-A233-E3628BC445F0",
-                NumberOfPages = 2,
                 OriginalLanguage = "French",
                 OriginalLetterURL = "https://api2.compassion.com/stage/ci/v2/images/321YZDQ_0107KC642000001/page/321YZDQ_0107KC642000005.tif",
                 SourceSystem = "CRM",
